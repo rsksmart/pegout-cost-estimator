@@ -2,6 +2,7 @@ const bridgeState = require('bridge-state-data-parser');
 const federationDetails = require('federation-details');
 const Web3 = require('web3');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
+const converter = require('btc-eth-unit-converter');
 const networkParser = require('./network-parser');
 
 let compareFunction = (a, b) => {
@@ -9,14 +10,6 @@ let compareFunction = (a, b) => {
     let bHash = BigInt('0x' + b.btcTxHash);
     
     return (aHash < bHash) ? -1 : ((aHash > bHash) ? 1 : (a.btcTxOutputIndex - b.btcTxOutputIndex));
-}
-
-let weisToSatoshis = (amountInWeis) => {
-    return amountInWeis / 1e10;
-}
-
-let satoshisToWeis = (amountInSatoshis) => {
-    return amountInSatoshis * 1e10;
 }
 
 let calculateRequiredUtxos = async(web3, amountToPegoutInSatoshis) => {
@@ -49,10 +42,9 @@ let calculatePegoutCostInWeis = async(network, amountToPegoutInSatoshis) => {
 
     let pegOutTxSizeInBytes = calculatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
     let feePerKb = await bridge.methods.getFeePerKb().call();
-
     let pegOutTxCostInSatoshis = pegOutTxSizeInBytes * feePerKb / 1000;
 
-    return satoshisToWeis(pegOutTxCostInSatoshis);
+    return converter.satoshisToWeis(pegOutTxCostInSatoshis);
 }
 
 let calculatePegoutValueInSatoshis = async(network, amountToPegoutInWeis) => {
@@ -60,7 +52,7 @@ let calculatePegoutValueInSatoshis = async(network, amountToPegoutInWeis) => {
     let pegOutTxCostInWeis  = await calculatePegoutCostInWeis(network, amountToPegoutInSatoshis);
     let valueToReceiveInWeis = amountToPegoutInWeis - pegOutTxCostInWeis;
 
-    return weisToSatoshis(valueToReceiveInWeis);
+    return converter.weisToSatoshis(valueToReceiveInWeis);
 }
 
 let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {
@@ -69,9 +61,11 @@ let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeede
     // The outputs are composed of the scriptPubkeyHash (or publicKeyHash)
     // and the op_codes for the corresponding script
     let signatureSize = 72; // 1 byte for size and 71 for the signature
-    let scriptSigSize = signaturesNeeded * signatureSize + federationRedeemScript.length + 1;
+    let federationRedeemScriptSizeInBytes = federationRedeemScript.length / 2 + 1; // 1 extra byte for size
+    let additionalScriptSigDataSize = 2; // 1 byte for OP_0 at the beginnig and 1 for OP_PUSHDATA before the redeem script
+    let scriptSigSize = signaturesNeeded * signatureSize + federationRedeemScriptSizeInBytes + additionalScriptSigDataSize;
 
-    let additionalTxDataSize = 4; // Version field
+    let additionalTxDataSize = 10; // 4 bytes for version field, 1 for inputs counts, 1 for outputs count, 4 for lock_time
     let additionalInputDataSize = 40; // txid+vout+sequence
     let outputSize = 26; // 1 byte for size and 25 for scriptPubkeyHash (or publicKeyHash)
     let additionalOutputDataSize = 9; // value+index
