@@ -18,7 +18,7 @@
   "homepage": "https://github.com/rsksmart/pegout-cost-calculator#readme",
   "dependencies": {
     "bridge-state-data-parser": "github:rsksmart/bridge-state-data-parser.git",
-    "federation-details": "github:rootstock/federation-details.git#first-commit",
+    "powpeg-details": "github:rsksmart/powpeg-details.git",
     "web3": "^1.5.2",
     "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS",
     "btc-eth-unit-converter": "github:rsksmart/btc-eth-unit-converter.git#first-commit"

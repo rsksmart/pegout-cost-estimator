@@ -1,9 +1,8 @@
 const bridgeState = require('bridge-state-data-parser');
-const federationDetails = require('federation-details');
+const powpegDetails = require('powpeg-details');
 const Web3 = require('web3');
 const Bridge = require('@rsksmart/rsk-precompiled-abis').bridge;
 const converter = require('btc-eth-unit-converter');
-const networkParser = require('./network-parser');
 
 let compareFunction = (a, b) => {
     let aHash = BigInt('0x' + a.btcTxHash);
@@ -12,7 +11,7 @@ let compareFunction = (a, b) => {
     return (aHash < bHash) ? -1 : ((aHash > bHash) ? 1 : (a.btcTxOutputIndex - b.btcTxOutputIndex));
 }
 
-let calculateRequiredUtxos = async(web3, amountToPegoutInSatoshis) => {
+let calculateRequiredUtxos = async(amountToPegoutInSatoshis, web3) => {
     let bridgeStatus = await bridgeState(web3);
     let activeFederationUtxos = bridgeStatus.activeFederationUtxos;
     activeFederationUtxos.sort(compareFunction);
@@ -32,27 +31,17 @@ let calculateRequiredUtxos = async(web3, amountToPegoutInSatoshis) => {
     return selectedUtxos;
 }
 
-let calculatePegoutCostInWeis = async(network, amountToPegoutInSatoshis) => {
-    let networkUrl = networkParser(network);
-    let web3 = new Web3(networkUrl);
-    const bridge = Bridge.build(web3);
-    
-    let selectedUtxos = await calculateRequiredUtxos(web3, amountToPegoutInSatoshis);
-    let federationInformation = await federationDetails(network);
+let calculatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
+    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
-    let pegOutTxSizeInBytes = calculatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
-    let feePerKb = await bridge.methods.getFeePerKb().call();
-    let pegOutTxCostInSatoshis = pegOutTxSizeInBytes * feePerKb / 1000;
-
-    return converter.satoshisToWeis(pegOutTxCostInSatoshis);
+    return converter.satoshisToWeis(pegoutTxFeeInSatoshis + amountToPegoutInSatoshis);
 }
 
-let calculatePegoutValueInSatoshis = async(network, amountToPegoutInWeis) => {
-    let amountToPegoutInSatoshis = weisToSatoshis(amountToPegoutInWeis);
-    let pegOutTxCostInWeis  = await calculatePegoutCostInWeis(network, amountToPegoutInSatoshis);
-    let valueToReceiveInWeis = amountToPegoutInWeis - pegOutTxCostInWeis;
+let calculatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
+    let amountToPegoutInSatoshis = converter.weisToSatoshis(amountToPegoutInWeis);
+    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
-    return converter.weisToSatoshis(valueToReceiveInWeis);
+    return amountToPegoutInSatoshis - pegoutTxFeeInSatoshis;
 }
 
 let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {
@@ -73,6 +62,18 @@ let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeede
     return additionalTxDataSize + 
         (scriptSigSize + additionalInputDataSize) * inputsAmount +
         (outputSize + additionalOutputDataSize) * outputsAmount;
+}
+
+let calculatePegoutTxFeesInSatoshis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
+    const bridge = Bridge.build(web3);
+    
+    let selectedUtxos = await calculateRequiredUtxos(amountToPegoutInSatoshis, web3);
+    let federationInformation = await powpegDetails(web3, networkSettings);
+
+    let pegOutTxSizeInBytes = calculatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
+    let feePerKb = await bridge.methods.getFeePerKb().call();
+    
+    return pegOutTxSizeInBytes * feePerKb / 1000;
 }
 
 module.exports = {
