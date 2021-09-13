@@ -34,14 +34,14 @@ let calculateRequiredUtxos = async(amountToPegoutInSatoshis, web3) => {
 let calculatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
     let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
-    return converter.satoshisToWeis(pegoutTxFeeInSatoshis + amountToPegoutInSatoshis);
+    return converter.satoshisToWeis(Number(pegoutTxFeeInSatoshis) + Number(amountToPegoutInSatoshis));
 }
 
 let calculatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
     let amountToPegoutInSatoshis = converter.weisToSatoshis(amountToPegoutInWeis);
     let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
-    return amountToPegoutInSatoshis - pegoutTxFeeInSatoshis;
+    return Number(amountToPegoutInSatoshis) - Number(pegoutTxFeeInSatoshis);
 }
 
 let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {

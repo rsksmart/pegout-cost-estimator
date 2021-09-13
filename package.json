@@ -1,8 +1,8 @@
 {
   "name": "pegout-cost-calculator",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Library to help calculate peg-out costs",
-  "main": "index.js",
+  "main": "pegout-cost-calculator.js",
   "scripts": {
     "test": "nyc mocha --timeout 10000"
   },
@@ -19,15 +19,16 @@
   "dependencies": {
     "bridge-state-data-parser": "github:rsksmart/bridge-state-data-parser.git",
     "powpeg-details": "github:rsksmart/powpeg-details.git",
-    "web3": "^1.5.2",
     "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS",
     "btc-eth-unit-converter": "github:rsksmart/btc-eth-unit-converter.git#first-commit"
   },
   "devDependencies": {
+    "web3": "^1.5.2",
     "chai": "^4.3.4",
     "mocha": "^9.1.0",
     "nyc": "^15.1.0",
     "rewire": "^5.0.0",
-    "sinon": "^11.1.2"
+    "sinon": "^11.1.2",
+    "rsk-network-settings": "github:rsksmart/rsk-network-settings.git"
   }
 }
