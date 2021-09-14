@@ -25,23 +25,10 @@ let calculateRequiredUtxos = async(amountToPegoutInSatoshis, web3) => {
     }
 
     if (selectedUtxosValue < amountToPegoutInSatoshis) {
-        throw new Error(`Not enough utxos available in the Bridge to peg-out ${amountToPegout} satoshis`);
+        throw new Error(`Not enough utxos available in the Bridge to peg-out ${amountToPegoutInSatoshis} satoshis`);
     }
 
     return selectedUtxos;
-}
-
-let calculatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
-    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
-
-    return converter.satoshisToWeis(Number(pegoutTxFeeInSatoshis) + Number(amountToPegoutInSatoshis));
-}
-
-let calculatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
-    let amountToPegoutInSatoshis = converter.weisToSatoshis(amountToPegoutInWeis);
-    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
-
-    return Number(amountToPegoutInSatoshis) - Number(pegoutTxFeeInSatoshis);
 }
 
 let calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {
@@ -76,7 +63,25 @@ let calculatePegoutTxFeesInSatoshis = async(amountToPegoutInSatoshis, web3, netw
     return pegOutTxSizeInBytes * feePerKb / 1000;
 }
 
+let calculatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
+    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
+
+    return converter.satoshisToWeis(Number(pegoutTxFeeInSatoshis) + Number(amountToPegoutInSatoshis));
+}
+
+let calculatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
+    let amountToPegoutInSatoshis = converter.weisToSatoshis(amountToPegoutInWeis);
+    let pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
+
+    return Number(amountToPegoutInSatoshis) - Number(pegoutTxFeeInSatoshis);
+}
+
+let setUtxoSortingMethod = (_compareFunction) => {
+    compareFunction = _compareFunction;
+}
+
 module.exports = {
     calculatePegoutCostInWeis,
-    calculatePegoutValueInSatoshis
+    calculatePegoutValueInSatoshis,
+    setUtxoSortingMethod
 }
