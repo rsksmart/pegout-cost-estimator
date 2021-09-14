@@ -1,6 +1,6 @@
 {
   "name": "pegout-cost-calculator",
-  "version": "0.1.0",
+  "version": "0.1.0-beta",
   "description": "Library to help calculate peg-out costs",
   "main": "pegout-cost-calculator.js",
   "scripts": {
