@@ -1,4 +1,5 @@
 const chai = require('chai');
+chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 const sinon = require('sinon');
 const rewire = require('rewire');
@@ -131,6 +132,12 @@ describe('Get peg-out cost in weis', () => {
             converter.satoshisToWeis(amountToPegoutInSatoshis + maxExpectedCostInSatoshis)
         );
     });
+
+    it('Should fail to calculate peg-out cost, when not enough utxos are available to complete the peg-out transaction', async () => {
+        let amountToPegoutInSatoshis = 10000000;
+
+        await expect(pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis)).to.be.rejectedWith(Error);
+    });
 });
 
 describe('Get peg-out value in satoshis', () => {
@@ -205,6 +212,13 @@ describe('Get peg-out value in satoshis', () => {
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
             amountToPegoutInSatoshis - minExpectedCostInSatoshis
         );
+    });
+
+    it('Should fail to calculate peg-out value, when not enough utxos are available to complete the peg-out transaction', async () => {
+        let amountToPegoutInSatoshis = 10000000;
+        let amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
+
+        await expect(pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis)).to.be.rejectedWith(Error);
     });
 });
 
