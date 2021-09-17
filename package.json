@@ -20,7 +20,7 @@
     "bridge-state-data-parser": "github:rsksmart/bridge-state-data-parser.git",
     "powpeg-details": "github:rsksmart/powpeg-details.git",
     "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS",
-    "btc-eth-unit-converter": "github:rsksmart/btc-eth-unit-converter.git#first-commit"
+    "btc-eth-unit-converter": "github:rsksmart/btc-eth-unit-converter.git"
   },
   "devDependencies": {
     "chai": "^4.3.4",
