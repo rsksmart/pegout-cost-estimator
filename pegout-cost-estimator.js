@@ -30,7 +30,7 @@ const calculateRequiredUtxos = async(amountToPegoutInSatoshis, web3) => {
     return selectedUtxos;
 }
 
-const calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {
+const estimatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeeded, federationRedeemScript) => {
     // A regular peg-out transaction has two outputs, one for the receiver and the change output
     // Each input has M/N signatures and each signature is around 71 bytes long (signed sighash)
     // The outputs are composed of the scriptPubkeyHash (or publicKeyHash)
@@ -50,27 +50,27 @@ const calculatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNee
         (outputSize + additionalOutputDataSize) * outputsAmount;
 }
 
-const calculatePegoutTxFeesInSatoshis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
+const estimatePegoutTxFeesInSatoshis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
     const bridge = Bridge.build(web3);
     
     const selectedUtxos = await calculateRequiredUtxos(amountToPegoutInSatoshis, web3);
     const federationInformation = await powpegDetails(web3, networkSettings);
 
-    const pegOutTxSizeInBytes = calculatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
+    const pegOutTxSizeInBytes = estimatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
     const feePerKb = await bridge.methods.getFeePerKb().call();
     
     return pegOutTxSizeInBytes * feePerKb / 1000;
 }
 
-const calculatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
-    const pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
+const estimatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
+    const pegoutTxFeeInSatoshis = await estimatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
     return converter.satoshisToWeis(Number(pegoutTxFeeInSatoshis) + Number(amountToPegoutInSatoshis));
 }
 
-const calculatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
+const estimatePegoutValueInSatoshis = async(amountToPegoutInWeis, web3, networkSettings) => {
     const amountToPegoutInSatoshis = converter.weisToSatoshis(amountToPegoutInWeis);
-    const pegoutTxFeeInSatoshis = await calculatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
+    const pegoutTxFeeInSatoshis = await estimatePegoutTxFeesInSatoshis(amountToPegoutInSatoshis, web3, networkSettings);
 
     return Number(amountToPegoutInSatoshis) - Number(pegoutTxFeeInSatoshis);
 }
@@ -80,7 +80,7 @@ const setUtxoSortingMethod = (_compareFunction) => {
 }
 
 module.exports = {
-    calculatePegoutCostInWeis,
-    calculatePegoutValueInSatoshis,
+    estimatePegoutCostInWeis,
+    estimatePegoutValueInSatoshis,
     setUtxoSortingMethod
 }

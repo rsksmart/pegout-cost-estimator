@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 const converter = require('btc-eth-unit-converter');
 
-let pegoutCostCalculator;
+let pegoutCostEstimator;
 let sandbox;
 const pegoutTxsSizeInBytes = { // Size according to the amount of inputs, info extracted from past peg-out transactions
     1: 513,
@@ -66,8 +66,8 @@ const powpegDetailsStub = () => Promise.resolve(
 describe('Get peg-out cost in weis', () => {
 
     beforeEach((done) => {
-        pegoutCostCalculator = rewire('../pegout-cost-calculator');
-        pegoutCostCalculator.__set__({
+        pegoutCostEstimator = rewire('../pegout-cost-estimator');
+        pegoutCostEstimator.__set__({
             'bridgeState': bridgeStateStub,
             'powpegDetails': powpegDetailsStub,
             'Bridge': bridgeStub
@@ -81,12 +81,12 @@ describe('Get peg-out cost in weis', () => {
         done();
     });
 
-    it('Should calculate peg-out cost, for transaction with 1 input and 2 outputs', async () => {
+    it('Should estimate peg-out cost, for transaction with 1 input and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 80000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] - 5) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] + 5) * feePerKb / 1000;
 
-        const pegoutCostInWeis = await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis);
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
         expect(pegoutCostInWeis).to.be.within(
             converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
@@ -94,12 +94,12 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should calculate peg-out cost, for transaction with 2 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out cost, for transaction with 2 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 115000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] - 10) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] + 10) * feePerKb / 1000;
 
-        const pegoutCostInWeis = await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis);
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
         expect(pegoutCostInWeis).to.be.within(
             converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
@@ -107,12 +107,12 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should calculate peg-out cost, for transaction with 3 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out cost, for transaction with 3 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 125000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
 
-        const pegoutCostInWeis = await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis);
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
         expect(pegoutCostInWeis).to.be.within(
             converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
@@ -120,12 +120,12 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should calculate peg-out cost, for transaction with 4 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out cost, for transaction with 4 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 140000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
 
-        const pegoutCostInWeis = await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis);
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
         expect(pegoutCostInWeis).to.be.within(
             converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
@@ -133,18 +133,18 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should fail to calculate peg-out cost, when not enough utxos are available to complete the peg-out transaction', async () => {
+    it('Should fail to estimate peg-out cost, when not enough utxos are available to complete the peg-out transaction', async () => {
         const amountToPegoutInSatoshis = 10000000;
 
-        await expect(pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis)).to.be.rejectedWith(Error);
+        await expect(pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis)).to.be.rejectedWith(Error);
     });
 });
 
 describe('Get peg-out value in satoshis', () => {
     
     beforeEach((done) => {
-        pegoutCostCalculator = rewire('../pegout-cost-calculator');
-        pegoutCostCalculator.__set__({
+        pegoutCostEstimator = rewire('../pegout-cost-estimator');
+        pegoutCostEstimator.__set__({
             'bridgeState': bridgeStateStub,
             'powpegDetails': powpegDetailsStub,
             'Bridge': bridgeStub
@@ -158,13 +158,13 @@ describe('Get peg-out value in satoshis', () => {
         done();
     });
     
-    it('Should calculate peg-out value, for transaction with 1 input and 2 outputs', async () => {
+    it('Should estimate peg-out value, for transaction with 1 input and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 80000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] - 5) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] + 5) * feePerKb / 1000;
 
-        const pegoutValueInSatoshis = await pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis);
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
         expect(pegoutValueInSatoshis).to.be.within(
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
@@ -172,13 +172,13 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should calculate peg-out value, for transaction with 2 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out value, for transaction with 2 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 115000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] - 10) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] + 10) * feePerKb / 1000;
 
-        const pegoutValueInSatoshis = await pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis);
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
         expect(pegoutValueInSatoshis).to.be.within(
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
@@ -186,13 +186,13 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should calculate peg-out value, for transaction with 3 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out value, for transaction with 3 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 125000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
 
-        const pegoutValueInSatoshis = await pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis);
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
         expect(pegoutValueInSatoshis).to.be.within(
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
@@ -200,13 +200,13 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should calculate peg-out value, for transaction with 4 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out value, for transaction with 4 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 140000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
 
-        const pegoutValueInSatoshis = await pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis);
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
         expect(pegoutValueInSatoshis).to.be.within(
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
@@ -214,19 +214,19 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should fail to calculate peg-out value, when not enough utxos are available to complete the peg-out transaction', async () => {
+    it('Should fail to estimate peg-out value, when not enough utxos are available to complete the peg-out transaction', async () => {
         const amountToPegoutInSatoshis = 10000000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
 
-        await expect(pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis)).to.be.rejectedWith(Error);
+        await expect(pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis)).to.be.rejectedWith(Error);
     });
 });
 
 describe('Get peg-out value in satoshis and peg-out cost in weis after setting new utxo sorting function', () => {
     
     beforeEach((done) => {
-        pegoutCostCalculator = rewire('../pegout-cost-calculator');
-        pegoutCostCalculator.__set__({
+        pegoutCostEstimator = rewire('../pegout-cost-estimator');
+        pegoutCostEstimator.__set__({
             'bridgeState': bridgeStateStub,
             'powpegDetails': powpegDetailsStub,
             'Bridge': bridgeStub
@@ -244,13 +244,13 @@ describe('Get peg-out value in satoshis and peg-out cost in weis after setting n
         return a.valueInSatoshis - b.valueInSatoshis;
     }
 
-    it('Should calculate peg-out cost using new utxo sorting function, for transaction with 3 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out cost using new utxo sorting function, for transaction with 3 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 40000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
 
-        pegoutCostCalculator.setUtxoSortingMethod(compareByValueFunction);
-        const pegoutCostInWeis = await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis);
+        pegoutCostEstimator.setUtxoSortingMethod(compareByValueFunction);
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
         expect(pegoutCostInWeis).to.be.within(
             converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
@@ -258,14 +258,14 @@ describe('Get peg-out value in satoshis and peg-out cost in weis after setting n
         );
     });
     
-    it('Should calculate peg-out value using new utxo sorting function, for transaction with 4 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out value using new utxo sorting function, for transaction with 4 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 80000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
 
-        pegoutCostCalculator.setUtxoSortingMethod(compareByValueFunction);
-        const pegoutValueInSatoshis = await pegoutCostCalculator.calculatePegoutValueInSatoshis(amountToPegoutInWeis);
+        pegoutCostEstimator.setUtxoSortingMethod(compareByValueFunction);
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
         expect(pegoutValueInSatoshis).to.be.within(
             amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
