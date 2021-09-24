@@ -11,9 +11,10 @@ const pegoutTxsSizeInBytes = { // Size according to the amount of inputs, info e
     1: 513,
     2: 950,
     3: 1386,
-    4: 1822
+    4: 1822,
+    5: 2250
 };
-const feePerKb = 100000;
+const feePerKb = 10000;
 
 const bridgeStateStub = () => Promise.resolve(
     {
@@ -29,7 +30,7 @@ const bridgeStateStub = () => Promise.resolve(
                 valueInSatoshis: 10000 
             },
             {
-                btcTxHash: 'abc3000000000000000000000000000000000000000000000000000000000000',
+                btcTxHash: 'abc4000000000000000000000000000000000000000000000000000000000000',
                 btcTxOutputIndex: 1,
                 valueInSatoshis: 50000 
             },
@@ -37,6 +38,11 @@ const bridgeStateStub = () => Promise.resolve(
                 btcTxHash: 'abc1000000000000000000000000000000000000000000000000000000000000',
                 btcTxOutputIndex: 1,
                 valueInSatoshis: 100000 
+            },
+            {
+                btcTxHash: 'abc3000000000000000000000000000000000000000000000000000000000000',
+                btcTxOutputIndex: 1,
+                valueInSatoshis: 9000 
             }
         ]
     }
@@ -81,7 +87,7 @@ describe('Get peg-out cost in weis', () => {
         done();
     });
 
-    it('Should estimate peg-out cost, for transaction with 1 input and 2 outputs', async () => {
+    it('Should estimate peg-out cost, for transaction with 1 input and 2 outputs. First utxo selection covers fees', async () => {
         const amountToPegoutInSatoshis = 80000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] - 5) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] + 5) * feePerKb / 1000;
@@ -94,8 +100,8 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should estimate peg-out cost, for transaction with 2 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 115000;
+    it('Should estimate peg-out cost, for transaction with 2 inputs and 2 outputs. First utxo selection covers fees', async () => {
+        const amountToPegoutInSatoshis = 110000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] - 10) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] + 10) * feePerKb / 1000;
 
@@ -107,8 +113,8 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should estimate peg-out cost, for transaction with 3 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 125000;
+    it('Should estimate peg-out cost, for transaction with 3 inputs and 2 outputs. First utxo selection does not cover fees', async () => {
+        const amountToPegoutInSatoshis = 115000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
 
@@ -120,10 +126,23 @@ describe('Get peg-out cost in weis', () => {
         );
     });
 
-    it('Should estimate peg-out cost, for transaction with 4 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 140000;
+    it('Should estimate peg-out cost, for transaction with 4 inputs and 2 outputs. First utxo selection does not cover fees', async () => {
+        const amountToPegoutInSatoshis = 120000;
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
+
+        const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
+        
+        expect(pegoutCostInWeis).to.be.within(
+            converter.satoshisToWeis(amountToPegoutInSatoshis + minExpectedCostInSatoshis), 
+            converter.satoshisToWeis(amountToPegoutInSatoshis + maxExpectedCostInSatoshis)
+        );
+    });
+
+    it('Should estimate peg-out cost, for transaction with 5 inputs and 2 outputs. First two utxo selections do not cover fees', async () => {
+        const amountToPegoutInSatoshis = 125000;
+        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] - 25) * feePerKb / 1000;
+        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] + 25) * feePerKb / 1000;
 
         const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
         
@@ -158,7 +177,7 @@ describe('Get peg-out value in satoshis', () => {
         done();
     });
     
-    it('Should estimate peg-out value, for transaction with 1 input and 2 outputs', async () => {
+    it('Should estimate peg-out value, for transaction with 1 input and 2 outputs. First utxo selection covers fees', async () => {
         const amountToPegoutInSatoshis = 80000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[1] - 5) * feePerKb / 1000;
@@ -172,8 +191,8 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should estimate peg-out value, for transaction with 2 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 115000;
+    it('Should estimate peg-out value, for transaction with 2 inputs and 2 outputs. First utxo selection covers fees', async () => {
+        const amountToPegoutInSatoshis = 110000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] - 10) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[2] + 10) * feePerKb / 1000;
@@ -186,8 +205,8 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should estimate peg-out value, for transaction with 3 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 125000;
+    it('Should estimate peg-out value, for transaction with 3 inputs and 2 outputs. First utxo selection does not cover fees', async () => {
+        const amountToPegoutInSatoshis = 115000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
@@ -200,11 +219,25 @@ describe('Get peg-out value in satoshis', () => {
         );
     });
 
-    it('Should estimate peg-out value, for transaction with 4 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 140000;
+    it('Should estimate peg-out value, for transaction with 4 inputs and 2 outputs. First utxo selection does not cover fees', async () => {
+        const amountToPegoutInSatoshis = 120000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
         const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
         const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
+
+        const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
+        
+        expect(pegoutValueInSatoshis).to.be.within(
+            amountToPegoutInSatoshis - maxExpectedCostInSatoshis,
+            amountToPegoutInSatoshis - minExpectedCostInSatoshis
+        );
+    });
+
+    it('Should estimate peg-out value, for transaction with 5 inputs and 2 outputs. First two utxo selections do not cover fees', async () => {
+        const amountToPegoutInSatoshis = 125000;
+        const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
+        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] - 25) * feePerKb / 1000;
+        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] + 25) * feePerKb / 1000;
 
         const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);
         
@@ -244,10 +277,10 @@ describe('Get peg-out value in satoshis and peg-out cost in weis after setting n
         return a.valueInSatoshis - b.valueInSatoshis;
     }
 
-    it('Should estimate peg-out cost using new utxo sorting function, for transaction with 3 inputs and 2 outputs', async () => {
+    it('Should estimate peg-out cost using new utxo sorting function, for transaction with 4 inputs and 2 outputs', async () => {
         const amountToPegoutInSatoshis = 40000;
-        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] - 12) * feePerKb / 1000;
-        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[3] + 12) * feePerKb / 1000;
+        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
+        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
 
         pegoutCostEstimator.setUtxoSortingMethod(compareByValueFunction);
         const pegoutCostInWeis = await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis);
@@ -258,11 +291,11 @@ describe('Get peg-out value in satoshis and peg-out cost in weis after setting n
         );
     });
     
-    it('Should estimate peg-out value using new utxo sorting function, for transaction with 4 inputs and 2 outputs', async () => {
-        const amountToPegoutInSatoshis = 80000;
+    it('Should estimate peg-out value using new utxo sorting function, for transaction with 5 inputs and 2 outputs', async () => {
+        const amountToPegoutInSatoshis = 90000;
         const amountToPegoutInWeis = converter.satoshisToWeis(amountToPegoutInSatoshis);
-        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] - 15) * feePerKb / 1000;
-        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[4] + 15) * feePerKb / 1000;
+        const minExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] - 25) * feePerKb / 1000;
+        const maxExpectedCostInSatoshis = (pegoutTxsSizeInBytes[5] + 25) * feePerKb / 1000;
 
         pegoutCostEstimator.setUtxoSortingMethod(compareByValueFunction);
         const pegoutValueInSatoshis = await pegoutCostEstimator.estimatePegoutValueInSatoshis(amountToPegoutInWeis);

@@ -52,14 +52,29 @@ const estimatePegOutTxSizeInBytes = (inputsAmount, outputsAmount, signaturesNeed
 
 const estimatePegoutTxFeesInSatoshis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
     const bridge = Bridge.build(web3);
-    
-    const selectedUtxos = await calculateRequiredUtxos(amountToPegoutInSatoshis, web3);
     const federationInformation = await powpegDetails(web3, networkSettings);
-
-    const pegOutTxSizeInBytes = estimatePegOutTxSizeInBytes(selectedUtxos.length, 2, federationInformation.federationThreshold, federationInformation.redeemScript);
     const feePerKb = await bridge.methods.getFeePerKb().call();
-    
-    return pegOutTxSizeInBytes * feePerKb / 1000;
+
+    let satoshisNeededToCoverPegoutAndFees = amountToPegoutInSatoshis;
+    let pegoutTxFeesInSatoshis;
+    let utxosCoverFees = false;
+    while (!utxosCoverFees) {
+        const selectedUtxos = await calculateRequiredUtxos(satoshisNeededToCoverPegoutAndFees, web3);
+        const pegOutTxSizeInBytes = estimatePegOutTxSizeInBytes(
+            selectedUtxos.length, 
+            2, 
+            federationInformation.federationThreshold, 
+            federationInformation.redeemScript
+        );
+
+        const selectedUtxosTotalValue = selectedUtxos.reduce((sum, utxo) => sum + utxo.valueInSatoshis, 0);
+        pegoutTxFeesInSatoshis = pegOutTxSizeInBytes * feePerKb / 1000;
+
+        satoshisNeededToCoverPegoutAndFees = amountToPegoutInSatoshis + pegoutTxFeesInSatoshis;
+        utxosCoverFees = selectedUtxosTotalValue >= satoshisNeededToCoverPegoutAndFees;
+    }
+
+    return pegoutTxFeesInSatoshis;
 }
 
 const estimatePegoutCostInWeis = async(amountToPegoutInSatoshis, web3, networkSettings) => {
