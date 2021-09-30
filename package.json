@@ -1,8 +1,8 @@
 {
-  "name": "pegout-cost-calculator",
+  "name": "pegout-cost-estimator",
   "version": "0.1.0-beta",
-  "description": "Library to help calculate peg-out costs",
-  "main": "pegout-cost-calculator.js",
+  "description": "Library to help estimate peg-out costs",
+  "main": "pegout-cost-estimator.js",
   "scripts": {
     "test": "nyc mocha --timeout 10000"
   },
@@ -13,9 +13,9 @@
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rsksmart/pegout-cost-calculator/issues"
+    "url": "https://github.com/rsksmart/pegout-cost-estimator/issues"
   },
-  "homepage": "https://github.com/rsksmart/pegout-cost-calculator#readme",
+  "homepage": "https://github.com/rsksmart/pegout-cost-estimator#readme",
   "dependencies": {
     "bridge-state-data-parser": "github:rsksmart/bridge-state-data-parser.git",
     "powpeg-details": "github:rsksmart/powpeg-details.git",

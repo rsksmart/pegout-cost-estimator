@@ -1,6 +1,6 @@
 const rskNetworkSettings = require('rsk-network-settings');
 const networkParser = require('./network-parser');
-const pegoutCostCalculator = require('../pegout-cost-calculator');
+const pegoutCostEstimator = require('../pegout-cost-estimator');
 const Web3 = require('web3');
 
 (async () => {
@@ -13,8 +13,8 @@ const Web3 = require('web3');
         if (isNaN(amountToPegoutInSatoshis)) {
             throw new Error('Need to provide a numeric value for the amount to pegout in satoshis');
         }
-        let pegoutCostInWeis = BigInt(await pegoutCostCalculator.calculatePegoutCostInWeis(amountToPegoutInSatoshis, web3, networkSettings));
-        console.log(`In order to receive ${amountToPegoutInSatoshis} satoshis, the user needs to send ${pegoutCostInWeis} weis to the bridge`);
+        let pegoutCostInWeis = BigInt(await pegoutCostEstimator.estimatePegoutCostInWeis(amountToPegoutInSatoshis, web3, networkSettings));
+        console.log(`In order to receive ${amountToPegoutInSatoshis} satoshis, the user needs to send approximately ${pegoutCostInWeis} weis to the bridge`);
     } catch (e) {
         console.log(e);
     }
