@@ -1,4 +1,5 @@
-[![CI/CD Using Github actions workflow](https://github.com/rsksmart/pegout-cost-calculator/actions/workflows/workflow.yml/badge.svg)](https://github.com/rsksmart/pegout-cost-calculator/actions/workflows/workflow.yml)
+[![CI/CD Using Github actions workflow](https://github.com/rsksmart/pegout-cost-estimator/actions/workflows/workflow.yml/badge.svg)](https://github.com/rsksmart/pegout-cost-estimator/actions/workflows/workflow.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/rsksmart/pegout-cost-estimator/badge)](https://scorecard.dev/viewer/?uri=github.com/rsksmart/pegout-cost-estimator)
 
 # Disclaimer
 
