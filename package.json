@@ -19,7 +19,7 @@
   "dependencies": {
     "bridge-state-data-parser": "github:rsksmart/bridge-state-data-parser.git",
     "powpeg-details": "github:rsksmart/powpeg-details.git",
-    "@rsksmart/rsk-precompiled-abis": "^4.0.2-IRIS",
+    "@rsksmart/rsk-precompiled-abis": "^5.0.0-HOP",
     "btc-eth-unit-converter": "github:rsksmart/btc-eth-unit-converter.git"
   },
   "devDependencies": {
